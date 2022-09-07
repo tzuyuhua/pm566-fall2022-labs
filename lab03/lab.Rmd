@@ -19,6 +19,41 @@ if (!file.exists("met_all.gz")){
 met <- data.table::fread("met_all.gz")
 ```
 
+## Step 2. Check the dimensions, headers, footers. How many columns, rows are there?
+
+```{r}
+dim(met)
+head(met)
+tail(met)
+```
+## Step 3.
+
+```{r}
+str(met)
+```
+
+
+## Step 4. Take a closer look
+
+```{r}
+table(met$year)
+table(met$day)
+table(met$hour)
+```
+
+```{r}
+summary(met$temp)
+summary(met$elev)
+summary(met$wind.sp)
+```
+
+##Replace elevations with 9999 as NA.
+
+```{r}
+met[met$elev==9999.0] <- NA
+met[, summary(elev)]
+```
+
 ## Including Plots
 
 You can also embed plots, for example:
