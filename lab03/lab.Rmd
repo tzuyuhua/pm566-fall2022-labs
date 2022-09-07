@@ -1,7 +1,8 @@
 ---
 title: "Lab 03"
-output: html_document
 date: "`r Sys.Date()`"
+output: github_document
+always_allow_html: true
 ---
 
 ```{r setup, include=FALSE}
@@ -94,6 +95,8 @@ hist(met$wind.sp)
 
 ```{r}
 library(leaflet)
+library(dplyr)
+library(tidyverse)
 elev <- met[elev==max(elev)]
 ```
 
