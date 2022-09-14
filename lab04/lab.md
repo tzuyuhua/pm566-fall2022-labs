@@ -129,120 +129,66 @@ met_avg <- met[ , .(
 ```
 
 Create a region variable for NW, SW, NE, SE based on lon = -98.00 and
-lat = 39.71 degrees Create a categorical variable for elevation as in
-the lecture slides \## Step 2. Check the dimensions, headers, footers.
-How many columns, rows are there?
-
-## Replace elevations with 9999 as NA.
+lat = 39.71 degrees
 
 ``` r
-met[met$elev==9999.0] <- NA
-met[, summary(elev)]
+met_avg[, region := fifelse(lon >= -98 & lat > 39.71, "NE", 
+                fifelse(lon < -98 & lat > 39.71, "NW",
+                fifelse(lon < -98 & lat <= 39.71, "SW",
+                "SE")))
+    ]
+table(met_avg$region)
 ```
 
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##   -12.0   101.0   254.0   415.7   401.0  4113.0      25
+    ## 
+    ##  NE  NW  SE  SW 
+    ## 484 146 649 297
 
-The weather station with the highest elevation is at 4113 meters.
+Create a categorical variable for elevation as in the lecture slides
 
 ``` r
-met <- met[temp>-40]
-met2 <- met[order(temp)]
-head(met2)
+met_avg[ ,elev_cat := fifelse(elev > 252, "high", "low")]
 ```
 
-    ##    USAFID  WBAN year month day hour min    lat      lon elev wind.dir
-    ## 1: 722817  3068 2019     8   1    1   6 38.767 -104.300 1838      180
-    ## 2: 725846 93201 2019     8   1   12  15 39.320 -120.139 1798       NA
-    ## 3: 725846 93201 2019     8   1   12  55 39.320 -120.140 1798       NA
-    ## 4: 725846 93201 2019     8   1   13  15 39.320 -120.139 1798       NA
-    ## 5: 725846 93201 2019     8   2   12  55 39.320 -120.139 1798       NA
-    ## 6: 725846 93201 2019     8   2   13  15 39.320 -120.139 1798       NA
-    ##    wind.dir.qc wind.type.code wind.sp wind.sp.qc ceiling.ht ceiling.ht.qc
-    ## 1:           5              N     5.1          5         NA             9
-    ## 2:           9              C     0.0          5      22000             5
-    ## 3:           9              C     0.0          1      22000             1
-    ## 4:           9              C     0.0          5      22000             5
-    ## 5:           9              C     0.0          5      22000             5
-    ## 6:           9              C     0.0          5      22000             5
-    ##    ceiling.ht.method sky.cond vis.dist vis.dist.qc vis.var vis.var.qc temp
-    ## 1:                 9        N       NA           9       N          5  -17
-    ## 2:                 9        N    16093           5       N          5    2
-    ## 3:                 9        N    16093           1       9          9    2
-    ## 4:                 9        N    16093           5       N          5    2
-    ## 5:                 9        N    16093           5       N          5    2
-    ## 6:                 9        N    16093           5       N          5    2
-    ##    temp.qc dew.point dew.point.qc atm.press atm.press.qc        rh        ymd
-    ## 1:       5        NA            9        NA            9        NA 2019-08-01
-    ## 2:       5         1            5        NA            9  93.18257 2019-08-01
-    ## 3:       1         2            1        NA            9 100.00000 2019-08-01
-    ## 4:       5         1            5        NA            9  93.18257 2019-08-01
-    ## 5:       C         0            C        NA            9  86.77534 2019-08-02
-    ## 6:       5         0            5        NA            9  86.77534 2019-08-02
+## 3. Make Viloin plots of dew point temp by design
 
 ``` r
-met <- met[temp>-15][order(temp)]
+met_avg[!is.na(region)] %>%
+  ggplot() +
+  geom_violin(mapping = aes( x=1, y= dew.point, color= region, fill=region))+
+  facet_wrap(~region, nrow = 1)
 ```
 
-## Step 5. Check the data against an external data source.
+    ## Warning: Removed 1 rows containing non-finite values (stat_ydensity).
 
-## Step 6. Calculate summary statistics
+![](lab_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+The highest dew point temperatures are reported inthe southeast.
 
 ``` r
-met[elev==max(elev, na.rm=TRUE), summary(wind.sp)]
+met_avg[!is.na(region)& !is.na(wind.sp)] %>%
+  ggplot() +
+  geom_violin(mapping = aes( x=1, y= wind.sp, color= region, fill=region))+
+  facet_wrap(~region, nrow = 1)
 ```
 
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##   0.000   2.600   4.600   4.916   6.700  11.800      26
+![](lab_files/figure-gfm/violin-wind.sp-1.png)<!-- -->
+
+The highest wind spped seem to occur in the NE.
+
+## 4. Use geom_point with geom_smooth to examine the association between dew point temperature and wind speed by region
+
+Colour points by region Make sure to deal with NA category Fit a linear
+regression line by region Describe what you observe in the graph
 
 ``` r
-met[elev==max(elev, na.rm=TRUE), summary(temp)]
+met_avg[!is.na(region)& !is.na(wind.sp)& !is.na(dew.point)] %>%
+  ggplot(mapping = aes( x=wind.sp, y= dew.point))+
+  geom_point(mapping = aes(color=region))+
+  geom_smooth(method = lm, mapping = aes(linetype = region))+
+  facet_wrap(~region, nrow = 2)
 ```
 
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##   5.000   6.000   8.000   8.233  10.000  13.000
+    ## `geom_smooth()` using formula 'y ~ x'
 
-``` r
-met[elev==max(elev, na.rm=TRUE), .(
-  temp_wind    = cor(temp, wind.sp, use= "complete"),
-  temp_hour    = cor(temp, hour,    use ="complete"),
-  wind.sp_day  = cor(wind.sp,day,   use ="complete"),
-  wind.sp_hour = cor(wind.sp, hour, use ="complete")
-)]
-```
-
-    ##     temp_wind temp_hour wind.sp_day wind.sp_hour
-    ## 1: -0.4462032 0.4295917  -0.2081152   -0.3303297
-
-## Step 7. Exploratory graphs
-
-``` r
-hist(met$elev, breaks=100)
-```
-
-![](lab_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
-
-``` r
-hist(met$temp)
-```
-
-![](lab_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
-
-``` r
-hist(met$wind.sp)
-```
-
-![](lab_files/figure-gfm/unnamed-chunk-9-3.png)<!-- -->
-
-``` r
-library(leaflet)
-library(dplyr)
-library(tidyverse)
-elev <- met[elev==max(elev)]
-```
-
-``` r
-#leaflet(elev) %>%
-#  addProviderTiles('OpenStreetMap') %>% 
-#  addCircles(lat=~lat,lng=~lon, opacity=1, fillOpacity=1, radius=100)
-```
+![](lab_files/figure-gfm/scatterplot-dewpoint-wind.sp-1.png)<!-- -->
