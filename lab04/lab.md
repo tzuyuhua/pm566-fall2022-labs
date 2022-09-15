@@ -3,6 +3,7 @@ Lab 04
 2022-09-14
 
 ``` r
+library(webshot)
 library(lubridate)
 ```
 
@@ -52,6 +53,10 @@ library(data.table)
     ## 
     ##     hour, isoweek, mday, minute, month, quarter, second, wday, week,
     ##     yday, year
+
+``` r
+library(leaflet)
+```
 
 ## Step 1. Read in the data
 
@@ -192,3 +197,68 @@ met_avg[!is.na(region)& !is.na(wind.sp)& !is.na(dew.point)] %>%
     ## `geom_smooth()` using formula 'y ~ x'
 
 ![](lab_files/figure-gfm/scatterplot-dewpoint-wind.sp-1.png)<!-- -->
+
+## 5. Use geom_bar to create barplots of the weather stations by elevation category coloured by region
+
+## 6. Use stat_summary to examine mean dew point and wind speed by region with standard deviation error bars
+
+``` r
+met_avg[!is.na(dew.point)] %>%
+  ggplot(mapping = aes(x = region, y = dew.point))+ 
+    stat_summary(fun.data  = "mean_sdl", geom = "errorbar") 
+```
+
+![](lab_files/figure-gfm/unnamed-chunk-6-1.png)<!-- --> I can show with
+mean or with error bars, but I’d like to show both.
+
+## 7. Make a map showing the spatial trend in relative h in the US
+
+``` r
+#generate a color palatte
+rh.pal <- colorNumeric(c('darkgreen','goldenrod','brown'), domain=met_avg$rh)
+rh.pal
+```
+
+    ## function (x) 
+    ## {
+    ##     if (length(x) == 0 || all(is.na(x))) {
+    ##         return(pf(x))
+    ##     }
+    ##     if (is.null(rng)) 
+    ##         rng <- range(x, na.rm = TRUE)
+    ##     rescaled <- scales::rescale(x, from = rng)
+    ##     if (any(rescaled < 0 | rescaled > 1, na.rm = TRUE)) 
+    ##         warning("Some values were outside the color scale and will be treated as NA")
+    ##     if (reverse) {
+    ##         rescaled <- 1 - rescaled
+    ##     }
+    ##     pf(rescaled)
+    ## }
+    ## <bytecode: 0x000000002ddd5138>
+    ## <environment: 0x000000002ddd3ae8>
+    ## attr(,"colorType")
+    ## [1] "numeric"
+    ## attr(,"colorArgs")
+    ## attr(,"colorArgs")$na.color
+    ## [1] "#808080"
+
+``` r
+top10rh <- met_avg[order(-rh)][1:10]
+
+rhmap <- leaflet(top10rh) %>% 
+  # The looks of the Map
+  addProviderTiles('CartoDB.Positron') %>% 
+  # Some circles
+  addCircles(
+    lat = ~lat, lng=~lon,
+                                                  # HERE IS OUR PAL!
+    label = ~paste0(rh), color = ~ rh.pal(rh),
+    opacity = 1, fillOpacity = 1, radius = 500
+    ) %>%
+  # And a pretty legend
+  addLegend('bottomleft', pal=rh.pal, values=met_avg$rh,
+          title='Relative Humid.', opacity=1)
+rhmap
+```
+
+![](lab_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->

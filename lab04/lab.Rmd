@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(lubridate)
 library(tidyverse)
 library(data.table)
+library(leaflet)
 ```
 
 
@@ -125,4 +126,60 @@ met_avg[!is.na(region)& !is.na(wind.sp)& !is.na(dew.point)] %>%
   facet_wrap(~region, nrow = 2)
 
 ```
+
+## 5. Use geom_bar to create barplots of the weather stations by elevation category coloured by region
+
+## 6. Use stat_summary to examine mean dew point and wind speed by region with standard deviation error bars
+
+```{r}
+met_avg[!is.na(dew.point)] %>%
+  ggplot(mapping = aes(x = region, y = dew.point))+ 
+    stat_summary(fun.data  = "mean_sdl", geom = "errorbar") 
+```
+I can show with mean or with error bars, but I'd like to show both.
+
+## 7. Make a map showing the spatial trend in relative h in the US
+
+```{r}
+#generate a color palatte
+rh.pal <- colorNumeric(c('darkgreen','goldenrod','brown'), domain=met_avg$rh)
+rh.pal
+```
+
+```{r}
+top10rh <- met_avg[order(-rh)][1:10]
+```
+
+tempmap <- leaflet(met_avg2) %>% 
+  # The looks of the Map
+  addProviderTiles('CartoDB.Positron') %>% 
+  # Some circles
+  addCircles(
+    lat = ~lat, lng=~lon,
+                                                  # HERE IS OUR PAL!
+    label = ~paste0(round(temp,2), ' C'), color = ~ temp.pal(temp),
+    opacity = 1, fillOpacity = 1, radius = 500
+    ) %>%
+  # And a pretty legend
+  addLegend('bottomleft', pal=temp.pal, values=met_avg2$temp,
+          title='Temperature, C', opacity=1)
+```
+
+```{r}
+rhmap <- leaflet(met_avg) %>% 
+  # The looks of the Map
+  addProviderTiles('CartoDB.Positron') %>% 
+  # Some circles
+  addCircles(
+    lat = ~lat, lng=~lon,
+                                                  # HERE IS OUR PAL!
+    label = ~paste0(rh), color = ~ rh.pal(rh),
+    opacity = 1, fillOpacity = 1, radius = 500
+    ) %>%
+  # And a pretty legend
+  addLegend('bottomleft', pal=rh.pal, values=met_avg$rh,
+          title='Relative Humid.', opacity=1)
+rhmap
+```
+
 
