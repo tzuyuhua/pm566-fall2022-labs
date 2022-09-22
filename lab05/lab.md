@@ -337,5 +337,5 @@ test <- merge(
   by.y = c("eucdist", "STATE"),
   all.x = FALSE, 
   all.y = TRUE
-)
+) 
 ```
