@@ -1,0 +1,253 @@
+---
+title: "Assignment 01 - Exploratory Data Analysis"
+author: "Tzu Yu Huang"
+date: "`r Sys.Date()`"
+output: github_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Read in the data, packages, and conduct EDA Checklist 
+
+```{r message=FALSE}
+library(webshot)
+library(lubridate)
+library(data.table)
+library(leaflet)
+library(dplyr)
+library(ggplot2)
+data04 <- data.table::fread("ad_viz_plotval_data_2004.csv")
+data19 <- data.table::fread("ad_viz_plotval_data_2019.csv")
+```
+For each of the two datasets, check the dimensions, headers, footers, variable names and variable types. Check for any data issues, particularly in the key variable we are analyzing. Make sure you write up a summary of all of your findings.
+
+```{r}
+dim(data04)
+```
+
+```{r}
+head(data04)
+```
+
+```{r}
+tail(data04)
+```
+
+```{r}
+str(data04)
+```
+
+```{r}
+dim(data19)
+```
+
+```{r}
+head(data19)
+```
+
+```{r}
+tail(data19)
+```
+
+```{r}
+str(data19)
+```
+Now I want to check if there's any missing or improbable value in the key variables.
+```{r}
+summary(data04$`Daily Mean PM2.5 Concentration`)
+mean(is.na(data04$`Daily Mean PM2.5 Concentration`))
+summary(data19$`Daily Mean PM2.5 Concentration`)
+mean(is.na(data19$`Daily Mean PM2.5 Concentration`))
+```
+
+```{r}
+table(data04$STATE)
+table(data04$COUNTY)
+table(data04$`Site ID`)
+mean(is.na(data04$STATE))
+mean(is.na(data04$COUNTY))
+mean(is.na(data04$`Site ID`))
+```
+
+```{r}
+table(data19$STATE)
+table(data19$COUNTY)
+table(data19$`Site ID`)
+mean(is.na(data19$STATE))
+mean(is.na(data19$COUNTY))
+mean(is.na(data19$`Site ID`))
+```
+Summary: there are no missing value for variable "Daily Mean PM2.5 Concentration", "STATE", "COUNTY", "Site ID" in the form of NA or 9999 as far as I can see. There is also more site than County, which makes perfect sense. 
+However, for PM2.5, there are some negative values. According to "https://www.epa.gov/sites/default/files/2016-10/documents/pm2.5_continuous_monitoring.pdf", If the atmosphere is very clean (approaching 0 µg/m3) and there is noise in the measurement, then a negative number may in fact be valid. And the proportion of negative values is low, 
+
+```{r}
+mean(data04$`Daily Mean PM2.5 Concentration` < 0)
+mean(data19$`Daily Mean PM2.5 Concentration` < 0)
+```
+so I'll ignore this problem for now.
+
+Another problem for "Daily Mean PM2.5 Concentration" is that both datasets has a max value significantly bigger than the mean. So I took a closer look at the distribution of the site that generate such value.
+
+```{r}
+data04[data04$`Daily Mean PM2.5 Concentration` == 251.0,]
+#site ID = 60431001
+data19[data19$`Daily Mean PM2.5 Concentration` == 120.90,]
+#site ID = 60371201
+
+boxplot(data04[data04$`Site ID` == 60431001, "Daily Mean PM2.5 Concentration"]$`Daily Mean PM2.5 Concentration`)
+boxplot(data19[data19$`Site ID` == 60371201, "Daily Mean PM2.5 Concentration"]$`Daily Mean PM2.5 Concentration`)
+```
+
+For the dataset from 2004, there are other extreme values that are close to 251, but for the dataset from 2019, all the other values are significantly further from 120.90, which makes it look very suspicious. And I will therefore remove it from the dataset.
+
+```{r}
+test <- data19[data19$`Daily Mean PM2.5 Concentration` < 120.90]
+```
+
+
+## Step 2. Combine the two years of data into one data frame. Use the Date variable to create a new column for year, which will serve as an identifier. Change the names of the key variables so that they are easier to refer to in your code.
+
+```{r}
+data04$Year <- 2004
+data19$Year <- 2019
+
+data <- rbind(data04, data19)
+
+colnames(data)[5] <- "PM2.5"
+colnames(data)[3] <- "Site_ID"
+```
+
+## Step 3. Create a basic map in leaflet() that shows the locations of the sites (make sure to use different colors for each year). Summarize the spatial distribution of the monitoring sites.
+
+```{r}
+#Extract information of the Site without duplication
+Siteinfo <- unique(data[, c("Site_ID", "SITE_LATITUDE", "SITE_LONGITUDE", "Year")])
+
+leaflet() %>% 
+  addProviderTiles('CartoDB.Positron') %>% 
+  addCircles(data = Siteinfo[Year == 2004], lat = ~SITE_LATITUDE, lng = ~SITE_LONGITUDE, opacity = 0.5, fillOpacity = 1, radius = 400, color = "blue") %>%
+  addCircles(data = Siteinfo[Year == 2019], lat = ~SITE_LATITUDE, lng = ~SITE_LONGITUDE, opacity = 0.5, fillOpacity = 1, radius = 400, color = "red")
+```
+Semi-transparent blue dots indicate sites in the 2004 data set, Semi-transparent red dots indicate sites in the 2019 data set, purple dots represent sites that are contained in both 2004 and 2019 data set. It seems like a huge portion of the sites exist in both data sets. I can see a lot of new sites in San Francisco, and one close to Las Vegas being remove.
+
+## Step 4. Check for any missing or implausible values of PM in the combined dataset. Explore the proportions of each and provide a summary of any temporal patterns you see in these observations.
+
+```{r}
+nrow(data[Year == 2004])
+nrow(data[Year == 2019])
+nrow(data)
+nrow(data[Year == 2004])/nrow(data)
+nrow(data[Year == 2019])/nrow(data)
+
+ggplot(data = data) + 
+     geom_bar(mapping = aes(x = Year, y = stat(prop), group = 1))
+```
+
+The graph above shows the proportion of data from 2004 and 2019. It shows that the closer it is to the present, the more data there are, which makes sense.
+
+We also check the differences in county and sites between the 2 time periods.
+```{r}
+unique(data[Year== 2004]$COUNTY) %in% unique(data[Year== 2019]$COUNTY) %>% mean()
+
+unique(data[Year== 2004]$Site_ID) %in% unique(data[Year== 2019]$Site_ID) %>% mean()
+```
+```{r}
+unique(data[Year== 2019]$COUNTY) %in% unique(data[Year== 2004]$COUNTY) %>% mean()
+
+unique(data[Year== 2019]$Site_ID) %in% unique(data[Year== 2004]$Site_ID) %>% mean()
+```
+So counties that exist in both datasets takes up 100% of the counties from 2004, and 92% from 2019. And sites that exist in both datasets takes up 74% of the counties from 2004, and 49% from 2019.   
+
+## Step 5. Explore the main question of interest at three different spatial levels. Create exploratory plots (e.g. boxplots, histograms, line plots) and summary statistics that best suit each level of data. Be sure to write up explanations of what you observe in these data.
+
+I first take a look at the distribution of PM2.5 from both time period.
+
+```{r}
+hist(data[Year == 2004]$PM2.5, 100)
+hist(data[Year == 2004]$PM2.5, 100)
+```
+
+Both looks to be pretty right skewed, I'll mainly use median for the following analysis. Mean will also be use for sensitivity purposes.
+
+# State level analysis
+```{r}
+data %>% ggplot()+
+     geom_boxplot(mapping=aes(x=Year, y= PM2.5, group = Year))
+```
+
+It seems that PM2.5 in 2019 is lower than 2004 from a State wise perspective.
+
+# County level analysis_datatset_prep
+
+Using information only from counties that exist in both years. To control for confounding.
+```{r median-county}
+match(unique(data04$COUNTY), unique(data19$COUNTY))
+match(unique(data19$COUNTY), unique(data04$COUNTY))
+county_median <- group_by(data, Year, COUNTY) %>% summarize(PM2.5 = median(PM2.5, na.rm= TRUE))
+
+county_median_both <- county_median[which(county_median$COUNTY %in% unique(data04$COUNTY)),]
+
+head(county_median_both)
+dim(county_median_both)
+```
+
+```{r mean_county}
+match(unique(data04$COUNTY), unique(data19$COUNTY))
+match(unique(data19$COUNTY), unique(data04$COUNTY))
+county_mean <- group_by(data, Year, COUNTY) %>% summarize(PM2.5 = mean(PM2.5, na.rm= TRUE))
+
+county_mean_both <- county_mean[which(county_mean$COUNTY %in% unique(data04$COUNTY)),]
+head(county_mean_both)
+dim(county_mean_both)
+```
+# County level analysis_plot
+```{r fig.height=7, fig.width= 11}
+qplot(xyear, PM2.5, data = mutate(county_median_both, xyear = as.numeric(as.character(Year))),
+       color = factor(COUNTY), 
+       geom = c("point", "line"), main = "Change in median PM2.5 levels from 2004 to 2019 by County")
+```
+
+```{r fig.height=7, fig.width= 11}
+qplot(xyear, PM2.5, data = mutate(county_mean_both, xyear = as.numeric(as.character(Year))),
+       color = factor(COUNTY), 
+       geom = c("point", "line"), main = "Change in mean PM2.5 levels from 2004 to 2019 by County")
+```
+
+For both mean and median, the overall trend for the level of PM2.5 from 2019 seems to be lower than 2004.
+
+# Site level analysis_datatset_prep
+
+Using information only from sites that exist in both years. To control for confounding.
+```{r median_site}
+Site_median <- group_by(data, Year, Site_ID) %>% summarize(PM2.5 = mean(PM2.5, na.rm= TRUE))
+
+site_median_both <- Site_median[which(Site_median$Site_ID %in% unique(data04$`Site ID`)),]
+head(site_median_both)
+dim(site_median_both)
+```
+
+```{r mean_site}
+Site_mean <- group_by(data, Year, Site_ID) %>% summarize(PM2.5 = mean(PM2.5, na.rm= TRUE))
+
+site_mean_both <- Site_mean[which(Site_mean$Site_ID %in% unique(data04$`Site ID`)),]
+head(site_mean_both)
+dim(site_mean_both)
+```
+
+# Site level analysis_plot
+```{r fig.height= 10, fig.width=15}
+qplot(xyear, PM2.5, data = mutate(site_median_both, xyear = as.numeric(as.character(Year))),
+       color = factor(Site_ID), 
+       geom = c("point", "line"), main = "Change in median PM2.5 levels from 2004 to 2019 by Site")
+```
+
+```{r fig.height= 10, fig.width=15}
+qplot(xyear, PM2.5, data = mutate(site_mean_both, xyear = as.numeric(as.character(Year))),
+       color = factor(Site_ID), 
+       geom = c("point", "line"), main = "Change in mean PM2.5 levels from 2004 to 2019 by Site")
+```
+
+For both mean and median, the overall trend for the level of PM2.5 from 2019 seems to be lower than 2004.
