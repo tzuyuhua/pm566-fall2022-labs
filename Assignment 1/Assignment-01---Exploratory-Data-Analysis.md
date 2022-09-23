@@ -1,12 +1,12 @@
 Assignment 01 - Exploratory Data Analysis
 ================
 Tzu Yu Huang
-2022-09-22
+2022-09-23
 
 ## 1. Read in the data, packages, and conduct EDA Checklist
 
 ``` r
-library(webshot)
+library(webshot) 
 library(lubridate)
 library(data.table)
 library(leaflet)
