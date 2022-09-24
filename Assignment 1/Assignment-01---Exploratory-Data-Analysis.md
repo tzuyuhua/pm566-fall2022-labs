@@ -1,7 +1,7 @@
 Assignment 01 - Exploratory Data Analysis
 ================
 Tzu Yu Huang
-2022-09-23
+2022-09-24
 
 ## 1. Read in the data, packages, and conduct EDA Checklist
 
@@ -541,7 +541,7 @@ significantly further from 120.90, which makes it look very suspicious.
 And I will therefore remove it from the dataset.
 
 ``` r
-test <- data19[data19$`Daily Mean PM2.5 Concentration` < 120.90]
+data19 <- data19[data19$`Daily Mean PM2.5 Concentration` < 120.90]
 ```
 
 ## Step 2. Combine the two years of data into one data frame. Use the Date variable to create a new column for year, which will serve as an identifier. Change the names of the key variables so that they are easier to refer to in your code.
@@ -588,25 +588,25 @@ nrow(data[Year == 2004])
 nrow(data[Year == 2019])
 ```
 
-    ## [1] 53156
+    ## [1] 53155
 
 ``` r
 nrow(data)
 ```
 
-    ## [1] 72389
+    ## [1] 72388
 
 ``` r
 nrow(data[Year == 2004])/nrow(data)
 ```
 
-    ## [1] 0.2656895
+    ## [1] 0.2656932
 
 ``` r
 nrow(data[Year == 2019])/nrow(data)
 ```
 
-    ## [1] 0.7343105
+    ## [1] 0.7343068
 
 ``` r
 ggplot(data = data) + 
@@ -789,12 +789,13 @@ qplot(xyear, PM2.5, data = mutate(county_mean_both, xyear = as.numeric(as.charac
 For both mean and median, the overall trend for the level of PM2.5 from
 2019 seems to be lower than 2004.
 
-# Site level analysis_datatset_prep
+# Site (in Los Angeles) level analysis_datatset_prep
 
 Using information only from sites that exist in both years. To control
 for confounding.
 
 ``` r
+data <- data[COUNTY == "Los Angeles"]
 Site_median <- group_by(data, Year, Site_ID) %>% summarize(PM2.5 = mean(PM2.5, na.rm= TRUE))
 ```
 
@@ -809,18 +810,18 @@ head(site_median_both)
     ## # Groups:   Year [1]
     ##    Year  Site_ID PM2.5
     ##   <dbl>    <int> <dbl>
-    ## 1  2004 60010007 11.3 
-    ## 2  2004 60011001 10.1 
-    ## 3  2004 60070002 14.7 
-    ## 4  2004 60074001  8.32
-    ## 5  2004 60090001  7.61
-    ## 6  2004 60111002 10.0
+    ## 1  2004 60370002  18.4
+    ## 2  2004 60371002  19.2
+    ## 3  2004 60371103  20.1
+    ## 4  2004 60371201  15.6
+    ## 5  2004 60371301  18.5
+    ## 6  2004 60371601  19.9
 
 ``` r
 dim(site_median_both)
 ```
 
-    ## [1] 184   3
+    ## [1] 19  3
 
 ``` r
 Site_mean <- group_by(data, Year, Site_ID) %>% summarize(PM2.5 = mean(PM2.5, na.rm= TRUE))
@@ -837,18 +838,18 @@ head(site_mean_both)
     ## # Groups:   Year [1]
     ##    Year  Site_ID PM2.5
     ##   <dbl>    <int> <dbl>
-    ## 1  2004 60010007 11.3 
-    ## 2  2004 60011001 10.1 
-    ## 3  2004 60070002 14.7 
-    ## 4  2004 60074001  8.32
-    ## 5  2004 60090001  7.61
-    ## 6  2004 60111002 10.0
+    ## 1  2004 60370002  18.4
+    ## 2  2004 60371002  19.2
+    ## 3  2004 60371103  20.1
+    ## 4  2004 60371201  15.6
+    ## 5  2004 60371301  18.5
+    ## 6  2004 60371601  19.9
 
 ``` r
 dim(site_mean_both)
 ```
 
-    ## [1] 184   3
+    ## [1] 19  3
 
 # Site level analysis_plot
 

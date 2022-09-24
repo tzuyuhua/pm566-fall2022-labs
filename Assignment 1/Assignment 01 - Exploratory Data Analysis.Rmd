@@ -104,7 +104,7 @@ boxplot(data19[data19$`Site ID` == 60371201, "Daily Mean PM2.5 Concentration"]$`
 For the dataset from 2004, there are other extreme values that are close to 251, but for the dataset from 2019, all the other values are significantly further from 120.90, which makes it look very suspicious. And I will therefore remove it from the dataset.
 
 ```{r}
-test <- data19[data19$`Daily Mean PM2.5 Concentration` < 120.90]
+data19 <- data19[data19$`Daily Mean PM2.5 Concentration` < 120.90]
 ```
 
 
@@ -218,10 +218,11 @@ qplot(xyear, PM2.5, data = mutate(county_mean_both, xyear = as.numeric(as.charac
 
 For both mean and median, the overall trend for the level of PM2.5 from 2019 seems to be lower than 2004.
 
-# Site level analysis_datatset_prep
+# Site (in Los Angeles) level analysis_datatset_prep
 
 Using information only from sites that exist in both years. To control for confounding.
 ```{r median_site}
+data <- data[COUNTY == "Los Angeles"]
 Site_median <- group_by(data, Year, Site_ID) %>% summarize(PM2.5 = mean(PM2.5, na.rm= TRUE))
 
 site_median_both <- Site_median[which(Site_median$Site_ID %in% unique(data04$`Site ID`)),]
