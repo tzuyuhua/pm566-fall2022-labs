@@ -240,7 +240,7 @@ dim(site_mean_both)
 
 # Site level analysis_plot
 ```{r fig.height= 10, fig.width=15}
-qplot(xyear, PM2.5, data = mutate(site_median_both, xyear = as.numeric(as.character(Year))),
+qplot(xyear, PM2.5, data = mutate(site_median_both, xyear = as.numeric(as.character(Year))), 
        color = factor(Site_ID), 
        geom = c("point", "line"), main = "Change in median PM2.5 levels from 2004 to 2019 by Site")
 ```
