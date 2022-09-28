@@ -283,8 +283,8 @@ knitr::kable()
 
 Which words are most used in each of the specialties. you can use
 group_by() and top_n() from dplyr to have the calculations be done
-within each specialty. Remember to remove stopwords. How about the most
-5 used words?
+within each specialty. Remember to remove stopwords. How about the 5
+most used words?
 
 ``` r
 mts %>%
