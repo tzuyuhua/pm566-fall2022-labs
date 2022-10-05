@@ -1,0 +1,107 @@
+---
+title: "class week 7"
+author: "Tzu Yu Huang"
+date: '2022-10-05'
+output: github_document
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r install-libraries}
+library(tidytext)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(forcats)
+library(stringr)
+library(data.table)
+```
+
+## Step 1. Read in the data
+First download and then read in 
+
+```{r read-data, cache=TRUE}
+fn <- "mtsamples.csv"
+if (!file.exists(fn))
+  download.file(
+    url = "https://github.com/USCbiostats/data-science-data/raw/master/00_mtsamples/mtsamples.csv",
+    destfile = fn
+  )
+mtsamples <- fread(fn, sep = ",", header = TRUE)
+```
+
+
+```{r}
+mtsamples[, cancer_type := str_extract(tolower(keywords), "[[:alnum:]-_]{4,}\\s*cancer")]
+mtsamples[, table(cancer_type)]
+
+```
+
+## Web scraping example
+
+```{r}
+library(rvest)
+library(xml2)
+# Reading the HTML table with the function xml2::read_html
+covid <- read_html(
+  x = "https://en.wikipedia.org/wiki/COVID-19_pandemic_death_rates_by_country"
+  )
+# Let's the the output
+covid
+```
+
+/html/body/div[3]/div[3]/div[5]/div[1]/div[3]/div[5]/table
+
+```{r}
+table <- xml_find_all(covid, xpath = "/html/body/div[3]/div[3]/div[5]/div[1]/div[3]/div[5]/table")
+table <- html_table(table) # This returns a list of tables
+head(table[[1]])
+```
+
+## API example
+
+```{r}
+library(httr)
+go_query <- GET(
+  url   = "http://api.geneontology.org/",
+  path  = "api/bioentity/function/GO:0140374/genes",
+  query = list(
+    evidence          = "ECO:0000006",
+    relationship_type = "involved_in"
+  ), 
+  # May need to pass this option to curl to allow to wait for at least
+  # 60 seconds before returning error.
+  config = config(
+    connecttimeout = 60
+    )
+)
+
+go_query
+```
+
+
+
+```{r}
+dat <- content(go_query) 
+dat <- lapply(dat$associations, function(a) {
+  data.frame(
+    Gene        = a$subject$id,
+    taxon_id    = a$subject$taxon$id,
+    taxon_label = a$subject$taxon$label
+  )
+})
+dat <- do.call(rbind, dat)
+str(dat)
+```
+
+```{r}
+knitr::kable(head(dat),
+  caption = "Genes experimentally annotated with the function\
+  **antiviral innate immune response** (GO:0140374)"
+  )
+```
+
+
