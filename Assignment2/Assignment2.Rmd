@@ -237,6 +237,7 @@ dat %>%
     fun.max = max,
     fun = median)
 ```
+
 It agrees with the conlcusion made before from the stacked histogram, while "obese", "overweight" group seems to have fev distributed higher than "normal bmi", and "underweight" seems to have the fev distributed the lowest.  
 
 ```{r fig.height=7, fig.width= 15}

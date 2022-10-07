@@ -646,11 +646,12 @@ dat %>%
     fun = median)
 ```
 
-![](Assignment2_files/figure-gfm/unnamed-chunk-14-1.png)<!-- --> It
-agrees with the conlcusion made before from the stacked histogram, while
-“obese”, “overweight” group seems to have fev distributed higher than
-“normal bmi”, and “underweight” seems to have the fev distributed the
-lowest.
+![](Assignment2_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+It agrees with the conlcusion made before from the stacked histogram,
+while “obese”, “overweight” group seems to have fev distributed higher
+than “normal bmi”, and “underweight” seems to have the fev distributed
+the lowest.
 
 ``` r
 dat[!is.na(fev) & !is.na(smoke_gas_exposure)] %>%
@@ -696,8 +697,8 @@ pm2.5.pal
     ##     }
     ##     pf(rescaled)
     ## }
-    ## <bytecode: 0x000000002f30ec88>
-    ## <environment: 0x000000002f316540>
+    ## <bytecode: 0x000000002d977698>
+    ## <environment: 0x000000002d979ee8>
     ## attr(,"colorType")
     ## [1] "numeric"
     ## attr(,"colorArgs")
