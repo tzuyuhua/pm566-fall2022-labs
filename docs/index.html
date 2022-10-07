@@ -369,19 +369,155 @@ pre code {
 <p>Question 1. How many papers are on Sars-cov-2?</p>
 <pre class="r"><code># Downloading the website
 website &lt;- xml2::read_html(&quot;https://pubmed.ncbi.nlm.nih.gov/?term=sars-cov-2&quot;)
-
 # Finding the counts
 counts &lt;- xml2::xml_find_first(website, &quot;/html/body/main/div[9]/div[2]/div[2]/div[1]/div[1]&quot;)
-
 # Turning it into text
 counts &lt;- as.character(counts)
-
 # Extracting the data using regex
-stringr::str_extract(counts, &quot;[0-9,+]&quot;)</code></pre>
-<pre><code>## [1] &quot;1&quot;</code></pre>
-<pre class="r"><code># Extracting the data using regex
 stringr::str_extract(counts, &quot;[0-9,]+&quot;)</code></pre>
-<pre><code>## [1] &quot;179,021&quot;</code></pre>
+<pre><code>## [1] &quot;179,134&quot;</code></pre>
+<div id="question-2-academic-publications-on-covid19-and-hawaii" class="section level2">
+<h2>Question 2: Academic publications on COVID19 and Hawaii</h2>
+<p>You need to query the following The parameters passed to the query
+are documented here. Use the function httr::GET() to make the following
+query:</p>
+<p>Baseline URL: <a href="https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi" class="uri">https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi</a></p>
+<p>Query parameters:</p>
+<p>db: pubmed<br />
+term: covid19 hawaii<br />
+retmax: 1000</p>
+<pre class="r"><code>library(httr)
+query_ids &lt;- GET(
+  url   = &quot;https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi&quot;,
+  query = list(
+    db      = &quot;pubmed&quot;,
+    term    = &quot;covid19 hawaii&quot;,
+    retmax  = 1000
+  ), 
+)
+# Extracting the content of the response of GET
+ids &lt;- httr::content(query_ids)</code></pre>
+</div>
+<div id="question-3-get-details-about-the-articles" class="section level2">
+<h2>Question 3: Get details about the articles</h2>
+<p>The Ids are wrapped around text in the following way: <Id>… id number
+…</Id>. we can use a regular expression that extract that information.
+Fill out the following lines of code:</p>
+<pre class="r"><code># Turn the result into a character vector
+ids &lt;- as.character(ids)
+# Find all the ids 
+ids &lt;- stringr::str_extract_all(ids, &quot;&lt;Id&gt;[[:digit:]]+&lt;/Id&gt;&quot;)[[1]]
+# Remove all the leading and trailing &lt;Id&gt; &lt;/Id&gt;. Make use of &quot;|&quot;
+ids &lt;- stringr::str_remove_all(ids, &quot;&lt;/?Id&gt;&quot;)
+head(ids)</code></pre>
+<pre><code>## [1] &quot;36186620&quot; &quot;36173983&quot; &quot;36146513&quot; &quot;36128780&quot; &quot;36126272&quot; &quot;36108254&quot;</code></pre>
+<p>Grab publications with these Pubmed IDs.</p>
+<pre class="r"><code>publications &lt;- GET(
+  url   = &quot;https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi&quot;,
+  query = list(
+    db  = &quot;pubmed&quot;,
+    id  = paste(ids,collapse = &quot;,&quot;),
+  retmax = 1000,
+  rettype = &quot;abstract&quot;
+    )
+)
+# Extracting the content of the response of GET
+publications &lt;- httr::content(publications)</code></pre>
+</div>
+<div id="question-4.-more-practice-with-regex" class="section level2">
+<h2>Question 4. More practice with regex</h2>
+</div>
+<div id="question-5.-form-a-database" class="section level2">
+<h2>Question 5. Form a database</h2>
+<p>We want to build a dataset which includes the title and the abstract
+of the paper. The title of all records is enclosed by the HTML tag
+ArticleTitle, and the abstract by Abstract.</p>
+<p>Before applying the functions to extract text directly, it will help
+to process the XML a bit. We will use the xml2::xml_children() function
+to keep one element per id. This way, if a paper is missing the
+abstract, or something else, we will be able to properly match PUBMED
+IDS with their corresponding records.</p>
+<pre class="r"><code>pub_char_list &lt;- xml2::xml_children(publications)
+pub_char_list &lt;- sapply(pub_char_list, as.character)</code></pre>
+<p>Now, extract the abstract and article title for each one of the
+elements of pub_char_list. You can either use sapply() as we just did,
+or simply take advantage of vectorization of stringr::str_extract</p>
+<pre class="r"><code>abstracts &lt;- str_extract(pub_char_list, &quot;&lt;Abstract&gt;[[:print:][:space:]]+&lt;/Abstract&gt;&quot;)
+abstracts[[1]]</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>abstracts &lt;- str_remove_all(abstracts, &quot;&lt;/?[[:alnum:]- =\&quot;]+&gt;&quot;) 
+abstracts[[1]]</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>abstracts &lt;- str_replace_all(abstracts, &quot;[[:space:]]+&quot;,&quot; &quot;)
+abstracts[[1]]</code></pre>
+<pre><code>## [1] NA</code></pre>
+<p>Now get the titles:</p>
+<pre class="r"><code>titles &lt;- str_extract(pub_char_list, &quot;&lt;ArticleTitle&gt;[[:print:][:space:]]+&lt;/ArticleTitle&gt;&quot;)
+titles[[1]]</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>titles &lt;- str_remove_all(titles, &quot;&lt;/?[[:alnum:]- =\&quot;]+&gt;&quot;)
+titles[[1]]</code></pre>
+<pre><code>## [1] NA</code></pre>
+<p>Finally the dataset:</p>
+<pre class="r"><code>database &lt;- data.frame(
+  PubMedId = ids,
+  Title    = titles,
+  Abstract = abstracts
+)
+knitr::kable(database[1:8,], caption = &quot;Some papers about Covid19 and Hawaii&quot;)</code></pre>
+<table>
+<caption>Some papers about Covid19 and Hawaii</caption>
+<thead>
+<tr class="header">
+<th align="left">PubMedId</th>
+<th align="left">Title</th>
+<th align="left">Abstract</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">36186620</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr class="even">
+<td align="left">36173983</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">36146513</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr class="even">
+<td align="left">36128780</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">36126272</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr class="even">
+<td align="left">36108254</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">36091468</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+<tr class="even">
+<td align="left">36081413</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+</tbody>
+</table>
+</div>
 
 
 
