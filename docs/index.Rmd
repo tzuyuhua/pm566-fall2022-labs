@@ -53,7 +53,7 @@ query_ids <- GET(
 ids <- httr::content(query_ids)
 ```
 
-## Question 3: Get details about the articles
+## Question 3: Get details about the articles.
 The Ids are wrapped around text in the following way: <Id>... id number ...</Id>. we can use a regular expression that extract that information. Fill out the following lines of code:
 
 
