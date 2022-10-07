@@ -26,7 +26,7 @@ counts <- as.character(counts)
 stringr::str_extract(counts, "[0-9,]+")
 ```
 
-## Question 2: Academic publications on COVID19 and Hawaii
+## Question 2: Academic publications on COVID19 and Hawaii.
 
 You need to query the following The parameters passed to the query are documented here.
 Use the function httr::GET() to make the following query:
