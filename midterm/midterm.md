@@ -1,6 +1,6 @@
 midterm
 ================
-2022-10-19
+2022-10-21
 
 ``` r
 library(webshot)
@@ -63,6 +63,37 @@ library(RSocrata)
 
 # Introduction
 
+Vaccine hesitancy, which is the reluctance or refusal to vaccinate
+despite the availability of vaccines, has been proposed by the World
+Health Organization (WHO) as one of the ten threats to global health in
+2019
+<https://www.who.int/news-room/spotlight/ten-threats-to-global-health-in-2019>,
+even before the global pandemic of COVID-19.
+
+Vaccine is currently one of the most cost-effective ways of preventing
+disease outbreak and reducing disease consequence, and consequently
+disease’s impact on economic. As of 2019, 2-3 million deaths a year are
+prevented by vaccination. If global coverage of vaccinations is improved
+, an estimated 1.5 million of death could be further avoided.
+
+As for the reason of vaccines hesitancy are complex, could be a result
+of numerous factors including lack of education, knowledge of how
+vacines are produce, distrust of government or authorities, or even just
+fear of needles. Its existence dates back the time vaccines were
+invented, however, it is only recently that it started to resurface to
+the discussion of mainstream media.
+
+After the global outbreak of COVID-19 and the invention of COVID-19
+vaccines, vaccine hesitancy plays an even more important role than
+before. We can observe vaccines being not just a measure of disease
+prevention, but also a mean of politics, yet we can also see a subset of
+population refused to get vaccinated even with the resources at hand.
+
+This report is not to discuss the cause of vaccine hesitancy or the
+legitimacy of the claims by certain “anti-vaccinationism”, but to see if
+vaccine hesitancy actually impacts the death and case number of COVID-19
+on a state level in the US.
+
 # Methods
 
 ## Step 1. Read in the data using both API web scrapping and read_excel
@@ -72,9 +103,9 @@ from US Center for Disease Control and Prevention, and the third one are
 from United States Census Bureau (an official website of the United
 State Government).
 
-The fisrt dataset is “Vaccine Hesitancy for COVID-19: County and local
-estimates” from
-<https://data.cdc.gov/Vaccinations/Vaccine-Hesitancy-for-COVID-19-County-and-local-es/q9mh-h2tw>
+1.  The fisrt dataset is “Vaccine Hesitancy for COVID-19: County and
+    local estimates” from
+    <https://data.cdc.gov/Vaccinations/Vaccine-Hesitancy-for-COVID-19-County-and-local-es/q9mh-h2tw>
 
 ``` r
 ori_hes <- read.socrata(
@@ -115,12 +146,15 @@ knitr::kable(rbind(Variable, Description), caption = "Main vaccine hesitency rel
 Main vaccine hesitency related variables from Vaccine Hesitancy for
 COVID-19: County and local estimates
 
-The second dataset is “United States COVID-19 Cases and Deaths by State
-over Time” from
-<https://data.cdc.gov/Case-Surveillance/United-States-COVID-19-Cases-and-Deaths-by-State-o/9mfq-cb36>
+2.  The second dataset is “United States COVID-19 Cases and Deaths by
+    State over Time” from
+    <https://data.cdc.gov/Case-Surveillance/United-States-COVID-19-Cases-and-Deaths-by-State-o/9mfq-cb36>
 
-And the main variable we’ll be looking are tot_cases: Total number of
-cases tot_death: Total number of deaths.
+And the main variable we’ll be looking are
+
+tot_cases: Total number of cases
+
+tot_death: Total number of deaths.
 
 ``` r
 death <- read.socrata(
@@ -133,10 +167,10 @@ death <- read.socrata(
 death <- as.data.table(death)
 ```
 
-And for the comparison between states summary statistics to be
-reasonable and effective, I need the population data of different
-places. “County Population Totals: 2020-2021” from
-<https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html>
+3.  And for the comparison between states summary statistics to be
+    reasonable and effective, I need the population data of different
+    places. “County Population Totals: 2020-2021” from
+    <https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html>
 
 ``` r
 county_pop <- read_excel("co-est2021-pop.xlsx", range = "A6:D3149", col_names = FALSE)
@@ -708,12 +742,17 @@ sum(is.na(county_pop$county_name))
 
     ## [1] 0
 
-Summary:
+Summary: Dateset “death” seems to have more NA’s compare to the other
+two datasets, fortunately not in the key variables we are interested in.
+On the otherhand, there is one missing value in
+social_vulnerability_index in dataset “hes”, we will deal with it later.
+No abnormal values are observed. And the county_name between dataset
+“hes” and “county_pop” are different, so we’ll deal with that to.
 
 ## Estimated state vaccine hesitancy level
 
-Now that in order for us to estimated state vaccine hesitancy level,
-I’ll assign population size to each county by merging the hesitency and
+Now that in order for us to estimate state vaccine hesitancy level, I’ll
+assign population size to each county by merging the hesitancy and
 population dataset.
 
 But before we do the merge, there are some slight differences in
@@ -774,7 +813,7 @@ hes[, social_vulnerability_index := fcoalesce(social_vulnerability_index, mean(s
 
 \##Estimate state level metrics
 
-Calculate State population
+Calculate State population (by adding up the counties population)
 
 ``` r
 hes[ , state_pop  := sum(July2021), by = .(state_code)]
@@ -823,8 +862,8 @@ knitr::kable(table(hes$state_SVI_cat), caption = "Summary table of stave level S
 
 Summary table of stave level SVI categories
 
-For us to explore the relationship between Covid-19 death and cases and
-hesitancy, I merge the data again with the Covid-19 death and cases
+For us to explore the relationship between COVID-19 death and cases and
+hesitancy, I merge the data again with the COVID-19 death and cases
 dataset.
 
 ``` r
@@ -853,7 +892,7 @@ date_mer <- merge[merge$max.date == merge$submission_date, ]
 ```
 
 After reviewing the data, there are a total number of 60 states in the
-Covid-19 death and cases dataset, after investigation, those state
+COVID-19 death and cases dataset, after investigation, those state
 include US territory oversea such as Guam and American Samoa, for this
 investigation, I’ll just focus on non-overseas US states.
 
@@ -878,16 +917,19 @@ length(unique(state_mer$state))
 
 # Results
 
-Lets first have a visuallization of which area has the highest estimated
+Lets first have a visualization of which area has the highest estimated
 hesitant.
+<https://data.cdc.gov/Vaccinations/Vaccine-Hesitancy-for-COVID-19-County-and-local-es/q9mh-h2tw>
 
 ``` r
 knitr::include_graphics("hes_map_image.png")
 ```
 
-![](hes_map_image.png)<!-- --> It seems like that around Los Angeles and
-New Work city are not very vaccine hesitant, but arond Montana and
-Wyoming are kind of hesitant to vaccines.
+![](hes_map_image.png)<!-- -->
+
+It seems like that around Los Angeles and New Work city are not very
+vaccine hesitant, but arond Montana and Wyoming are kind of hesitant to
+vaccines.
 
 Now lets take a look at the main research question.
 
@@ -924,6 +966,30 @@ From the above graph, there is also a positive correlation between
 vaccine hesitancy and total number of deaths (proportion to state
 population size). And the slope appears to be even steeper.
 
+Same plots but for more extreme hesitancy.
+
+``` r
+state_mer %>%
+  ggplot(mapping = aes(x = state_stro_hes, y = tot_cases/state_pop)) +
+  geom_point() + 
+  geom_smooth(method = lm, se = FALSE, col = "black")
+```
+
+    ## `geom_smooth()` using formula 'y ~ x'
+
+![](midterm_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+
+``` r
+state_mer %>%
+  ggplot(mapping = aes(x = state_stro_hes, y = tot_death/state_pop)) +
+  geom_point() + 
+  geom_smooth(method = lm, se = FALSE, col = "black")
+```
+
+    ## `geom_smooth()` using formula 'y ~ x'
+
+![](midterm_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+
 Now lets see if SVI is correlated with the outcome as well.
 
 ``` r
@@ -935,7 +1001,7 @@ state_mer %>%
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](midterm_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](midterm_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 ``` r
 state_mer %>%
@@ -946,10 +1012,11 @@ state_mer %>%
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-![](midterm_files/figure-gfm/unnamed-chunk-28-1.png)<!-- --> Very
-similar to the previous results, both total number of deaths and cases
-(proportion to state population sizes) are positively correlated with
-SVI, with death showing a slightly steeper slope.
+![](midterm_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+
+Very similar to the previous results, both total number of deaths and
+cases (proportion to state population sizes) are positively correlated
+with SVI, with death showing a slightly steeper slope.
 
 Lets also look at the distribution of the SVI categories, state wise.
 
@@ -959,7 +1026,7 @@ state_mer %>%
   geom_bar(mapping = aes(x = state_SVI_cat, colour = state_SVI_cat, fill=state_SVI_cat))
 ```
 
-![](midterm_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+![](midterm_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
 There are the least amount of states being categorized as “Very low”.
 
@@ -969,7 +1036,7 @@ state_mer %>%
   geom_boxplot(mapping=aes(x=state_SVI_cat, y=tot_cases/state_pop, fill=state_SVI_cat))
 ```
 
-![](midterm_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+![](midterm_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
 The above graph shows that states categorized as “High” seems to have
 the highest total number of cases (proportion to state population
@@ -981,7 +1048,7 @@ state_mer %>%
   geom_boxplot(mapping=aes(x=state_SVI_cat, y=tot_death/state_pop, fill=state_SVI_cat))
 ```
 
-![](midterm_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](midterm_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
 
 Similar trends for total number of deaths (proportion to state
 population sizes), but the differences are more obvious this time.
@@ -994,6 +1061,6 @@ general science community consensus, that vaccine can slow down the rate
 of COVID-19 transmission, and reduce COVID-19 symptom severity (increase
 protection against hospitalization and death in people).
 
-In additon to vaccine hesitancy, SVI also shows visual correlation with
-the outcome, suggesting that there may aspects other than vaccine that
-can be improved to reduce the severity of a pandemic.
+In addition to vaccine hesitancy, SVI also shows visual correlation with
+the outcome, suggesting that there may be aspects other than vaccine
+that can be improved to reduce the severity of a pandemic.
