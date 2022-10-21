@@ -1,5 +1,5 @@
 ---
-title: "midterm"
+title: "Midterm_Impact of Vaccine Hesitancy on COVID-19_TzuYuHuang"
 date: "`r Sys.Date()`"
 output: github_document
 always_allow_html: true
@@ -112,21 +112,18 @@ Check the dimensions, headers, footers, variable names and variable types
 dim(hes)
 head(hes)
 tail(hes)
-str(hes)
 ```
 
 ```{r}
 dim(death)
 head(death)
 tail(death)
-str(death)
 ```
 
 ```{r}
 dim(county_pop)
 head(county_pop)
 tail(county_pop)
-str(county_pop)
 ```
 
 Now I want to check if there’s any missing or improbable value in the key variables.
