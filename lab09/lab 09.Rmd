@@ -1,7 +1,12 @@
 ---
 title: "Lab 09"
 date: "`r Sys.Date()`"
-output: github_document
+output: 
+    html_document: default
+    pdf_document: default
+    github_document:
+      html_preview: false 
+    word_document: default
 always_allow_html: true
 ---
 
@@ -48,3 +53,50 @@ microbenchmark::microbenchmark(
 d <- matrix(1:16, ncol=4)
 d
 ```
+
+```{r}
+diag(d)
+d[2]
+d[2,1]
+d[c(1, 6, 11, 16)]
+cbind(1:4, 1:4)
+d[cbind(1:4, 1:4)]
+```
+
+## Problem 3
+
+Find the column max (hint: Checkout the function max.col()).
+
+```{r}
+#Data generating process
+set.seed(1234)
+M <- matrix(runif(12), ncol=4)
+M
+
+# Find each column's max value
+fun2 <- function(x) {
+  apply(x, 2, max)
+}
+fun2(M)
+
+fun2alt <- function(x) {
+  # YOUR CODE HERE
+    
+    idx <- max.col(t(x))
+    x[cbind(idx, 1:4)]
+  
+}
+fun2alt(M)
+
+x <- matrix(rnorm(1e4), nrow=10)
+
+# Benchmarking
+microbenchmark::microbenchmark(
+  fun2(x),
+  fun2alt(x)
+)
+```
+
+
+
+
