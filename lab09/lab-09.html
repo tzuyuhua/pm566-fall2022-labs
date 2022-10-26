@@ -391,9 +391,9 @@ microbenchmark::microbenchmark(
   fun1alt()
 )</code></pre>
 <pre><code>## Unit: microseconds
-##       expr   min     lq    mean median    uq    max neval
-##     fun1() 433.5 668.55 777.103  732.9 795.5 1438.1   100
-##  fun1alt()  23.0  25.45  61.868   27.6  31.0 2972.5   100</code></pre>
+##       expr   min    lq    mean median      uq    max neval
+##     fun1() 421.0 684.5 876.431 754.75 1017.60 1895.3   100
+##  fun1alt()  23.6  26.7  68.230  30.25   42.75 2903.3   100</code></pre>
 <pre class="r"><code>d &lt;- matrix(1:16, ncol=4)
 d</code></pre>
 <pre><code>##      [,1] [,2] [,3] [,4]
@@ -452,9 +452,12 @@ microbenchmark::microbenchmark(
   fun2alt(x)
 )</code></pre>
 <pre><code>## Unit: microseconds
-##        expr    min      lq     mean median     uq    max neval
-##     fun2(x) 1420.4 1509.50 1962.482 1766.7 2222.5 5783.6   100
-##  fun2alt(x)  149.5  181.45  272.376  215.8  254.9 4731.1   100</code></pre>
+##        expr    min     lq     mean  median      uq     max neval
+##     fun2(x) 1430.3 1548.9 2495.224 2045.95 2813.45 10305.0   100
+##  fun2alt(x)  154.6  179.4  339.066  227.00  316.75  4407.9   100</code></pre>
+</div>
+<div id="problem-4.-show-psock-cluster-example" class="section level2">
+<h2>Problem 4. Show PSOCK cluster example</h2>
 <pre class="r"><code>library(parallel)
 
 my_boot &lt;- function(dat, stat, R, ncpus = 1L) {

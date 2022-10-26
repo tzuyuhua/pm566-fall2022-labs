@@ -41,8 +41,8 @@ microbenchmark::microbenchmark(
 
     ## Unit: microseconds
     ##       expr   min     lq    mean median     uq    max neval
-    ##     fun1() 428.2 662.65 800.156 748.10 840.85 1769.6   100
-    ##  fun1alt()  24.5  26.85  74.041  29.05  38.05 3937.3   100
+    ##     fun1() 520.0 701.00 920.288 793.85 992.00 3288.4   100
+    ##  fun1alt()  24.4  26.35  69.263  31.30  46.05 2962.5   100
 
 ``` r
 d <- matrix(1:16, ncol=4)
@@ -145,9 +145,11 @@ microbenchmark::microbenchmark(
 ```
 
     ## Unit: microseconds
-    ##        expr    min     lq     mean  median      uq     max neval
-    ##     fun2(x) 1456.6 1578.7 2543.617 1792.70 2763.15 12503.8   100
-    ##  fun2alt(x)  155.8  210.1  313.814  243.05  304.75  4610.8   100
+    ##        expr    min      lq     mean  median      uq    max neval
+    ##     fun2(x) 1423.2 1549.30 1954.884 1741.00 2137.75 5882.3   100
+    ##  fun2alt(x)  150.7  187.85  291.721  231.95  291.75 3898.0   100
+
+## Problem 4. Show PSOCK cluster example
 
 ``` r
 library(parallel)
