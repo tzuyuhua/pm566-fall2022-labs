@@ -391,9 +391,9 @@ microbenchmark::microbenchmark(
   fun1alt()
 )</code></pre>
 <pre><code>## Unit: microseconds
-##       expr   min    lq    mean median     uq    max neval
-##     fun1() 430.0 671.7 783.846 762.95 831.15 1649.8   100
-##  fun1alt()  23.1  25.6  72.610  27.10  30.45 3181.8   100</code></pre>
+##       expr   min     lq    mean median    uq    max neval
+##     fun1() 433.5 668.55 777.103  732.9 795.5 1438.1   100
+##  fun1alt()  23.0  25.45  61.868   27.6  31.0 2972.5   100</code></pre>
 <pre class="r"><code>d &lt;- matrix(1:16, ncol=4)
 d</code></pre>
 <pre><code>##      [,1] [,2] [,3] [,4]
@@ -452,9 +452,62 @@ microbenchmark::microbenchmark(
   fun2alt(x)
 )</code></pre>
 <pre><code>## Unit: microseconds
-##        expr    min      lq     mean  median     uq    max neval
-##     fun2(x) 1357.2 1590.05 2090.082 1796.30 2463.9 5619.1   100
-##  fun2alt(x)  147.8  179.75  277.423  217.55  257.5 4506.5   100</code></pre>
+##        expr    min      lq     mean median     uq    max neval
+##     fun2(x) 1420.4 1509.50 1962.482 1766.7 2222.5 5783.6   100
+##  fun2alt(x)  149.5  181.45  272.376  215.8  254.9 4731.1   100</code></pre>
+<pre class="r"><code>library(parallel)
+
+my_boot &lt;- function(dat, stat, R, ncpus = 1L) {
+  
+  # Getting the random indices
+  n &lt;- nrow(dat)
+  idx &lt;- matrix(sample.int(n, n*R, TRUE), nrow=n, ncol=R)
+ 
+  # Making the cluster using `ncpus`
+  # STEP 1: GOES HERE
+  cl &lt;- makePSOCKcluster(4)   
+  clusterSetRNGStream(cl, 123) # Equivalent to `set.seed(123)`
+  
+  # STEP 2: GOES HERE
+  
+  clusterExport(cl  , c(&quot;stat&quot;, &quot;dat&quot;, &quot;idx&quot;), envir=environment())
+  
+    # STEP 3: THIS FUNCTION NEEDS TO BE REPLACES WITH parLapply
+  ans &lt;- parLapply(cl, seq_len(R), function(i) {
+    stat(dat[idx[,i], , drop=FALSE])
+  })
+  
+  # Coercing the list into a matrix
+  ans &lt;- do.call(rbind, ans)
+  
+  # STEP 4: GOES HERE
+  
+  ans
+  
+}</code></pre>
+<pre class="r"><code># Bootstrap of an OLS
+my_stat &lt;- function(d) coef(lm(y ~ x, data=d))
+
+# DATA SIM
+set.seed(1)
+n &lt;- 500; R &lt;- 1e4
+
+x &lt;- cbind(rnorm(n)); y &lt;- x*5 + rnorm(n)
+
+# Checking if we get something similar as lm
+ans0 &lt;- confint(lm(y~x))
+ans1 &lt;- my_boot(dat = data.frame(x, y), my_stat, R = R, ncpus = 2L)
+#stopCluster(cl)
+
+# You should get something like this
+t(apply(ans1, 2, quantile, c(.025,.975)))</code></pre>
+<pre><code>##                   2.5%      97.5%
+## (Intercept) -0.1386903 0.04856752
+## x            4.8685162 5.04351239</code></pre>
+<pre class="r"><code>ans0</code></pre>
+<pre><code>##                  2.5 %     97.5 %
+## (Intercept) -0.1379033 0.04797344
+## x            4.8650100 5.04883353</code></pre>
 </div>
 
 

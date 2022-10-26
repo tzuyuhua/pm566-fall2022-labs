@@ -41,8 +41,8 @@ microbenchmark::microbenchmark(
 
     ## Unit: microseconds
     ##       expr   min     lq    mean median     uq    max neval
-    ##     fun1() 585.0 720.45 937.427 824.85 962.00 2975.3   100
-    ##  fun1alt()  23.8  26.50  90.736  32.50  41.95 5429.5   100
+    ##     fun1() 428.2 662.65 800.156 748.10 840.85 1769.6   100
+    ##  fun1alt()  24.5  26.85  74.041  29.05  38.05 3937.3   100
 
 ``` r
 d <- matrix(1:16, ncol=4)
@@ -145,6 +145,70 @@ microbenchmark::microbenchmark(
 ```
 
     ## Unit: microseconds
-    ##        expr    min      lq     mean median      uq    max neval
-    ##     fun2(x) 1400.7 1529.75 1991.324 1629.2 2314.15 7120.3   100
-    ##  fun2alt(x)  147.8  181.70  293.525  216.9  261.25 5483.4   100
+    ##        expr    min     lq     mean  median      uq     max neval
+    ##     fun2(x) 1456.6 1578.7 2543.617 1792.70 2763.15 12503.8   100
+    ##  fun2alt(x)  155.8  210.1  313.814  243.05  304.75  4610.8   100
+
+``` r
+library(parallel)
+
+my_boot <- function(dat, stat, R, ncpus = 1L) {
+  
+  # Getting the random indices
+  n <- nrow(dat)
+  idx <- matrix(sample.int(n, n*R, TRUE), nrow=n, ncol=R)
+ 
+  # Making the cluster using `ncpus`
+  # STEP 1: GOES HERE
+  cl <- makePSOCKcluster(4)   
+  clusterSetRNGStream(cl, 123) # Equivalent to `set.seed(123)`
+  
+  # STEP 2: GOES HERE
+  
+  clusterExport(cl  , c("stat", "dat", "idx"), envir=environment())
+  
+    # STEP 3: THIS FUNCTION NEEDS TO BE REPLACES WITH parLapply
+  ans <- parLapply(cl, seq_len(R), function(i) {
+    stat(dat[idx[,i], , drop=FALSE])
+  })
+  
+  # Coercing the list into a matrix
+  ans <- do.call(rbind, ans)
+  
+  # STEP 4: GOES HERE
+  
+  ans
+  
+}
+```
+
+``` r
+# Bootstrap of an OLS
+my_stat <- function(d) coef(lm(y ~ x, data=d))
+
+# DATA SIM
+set.seed(1)
+n <- 500; R <- 1e4
+
+x <- cbind(rnorm(n)); y <- x*5 + rnorm(n)
+
+# Checking if we get something similar as lm
+ans0 <- confint(lm(y~x))
+ans1 <- my_boot(dat = data.frame(x, y), my_stat, R = R, ncpus = 2L)
+#stopCluster(cl)
+
+# You should get something like this
+t(apply(ans1, 2, quantile, c(.025,.975)))
+```
+
+    ##                   2.5%      97.5%
+    ## (Intercept) -0.1386903 0.04856752
+    ## x            4.8685162 5.04351239
+
+``` r
+ans0
+```
+
+    ##                  2.5 %     97.5 %
+    ## (Intercept) -0.1379033 0.04797344
+    ## x            4.8650100 5.04883353
