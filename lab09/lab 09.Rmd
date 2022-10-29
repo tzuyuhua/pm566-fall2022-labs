@@ -12,9 +12,10 @@ always_allow_html: true
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Problem 2.
+## Problem 2
 
 Create a  n x k matric of Poisson variables with mean lambda
+
 ```{r}
 set.seed(1235)
 fun1 <- function(n = 100, k = 4, lambda = 4) {

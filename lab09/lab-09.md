@@ -1,8 +1,8 @@
 Lab 09
 ================
-2022-10-26
+2022-10-28
 
-## Problem 2.
+## Problem 2
 
 Create a n x k matric of Poisson variables with mean lambda
 
@@ -40,9 +40,9 @@ microbenchmark::microbenchmark(
 ```
 
     ## Unit: microseconds
-    ##       expr   min     lq    mean median     uq    max neval
-    ##     fun1() 513.7 676.80 856.374  798.6 968.15 1777.0   100
-    ##  fun1alt()  24.3  27.15 107.052   34.6  42.90 5962.9   100
+    ##       expr   min     lq     mean  median     uq    max neval
+    ##     fun1() 439.3 753.45 1120.057 1113.85 1263.2 3181.2   100
+    ##  fun1alt()  24.9  30.80   82.047   37.80   51.6 3172.5   100
 
 ``` r
 d <- matrix(1:16, ncol=4)
@@ -145,9 +145,9 @@ microbenchmark::microbenchmark(
 ```
 
     ## Unit: microseconds
-    ##        expr    min      lq     mean  median      uq    max neval
-    ##     fun2(x) 1434.7 1628.95 2139.582 1834.05 2421.95 6167.7   100
-    ##  fun2alt(x)  148.8  206.25  309.588  242.90  304.65 4228.2   100
+    ##        expr    min      lq     mean  median     uq    max neval
+    ##     fun2(x) 1419.5 1560.05 1971.400 1740.50 2047.0 5280.0   100
+    ##  fun2alt(x)  147.7  193.50  278.632  217.35  267.6 3627.4   100
 
 ## Problem 4. Show PSOCK cluster example.
 
