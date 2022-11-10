@@ -330,7 +330,7 @@ Create a heatmap to visualize `new_cases` for each state on each date greater th
 - Start by mapping selected features in the dataframe into a matrix using the **tidyr** package function `pivot_wider()`, naming the rows and columns, as done in the lecture notes
 - Use `plot_ly()` to create a heatmap out of this matrix. Which states stand out?
 - Repeat with `newper100k` variable. Now which states stand out? 
-- Create a second heatmap in which the pattern of `new_cases` for each state over time becomes more clear by filtering to only look at dates every two weeks 
+- Create a second heatmap in which the pattern of `new_cases` for each state over time becomes more clear by filtering to only look at dates every two weeks. 
 
 ```{r}
 
@@ -384,7 +384,7 @@ plot_ly(x=colnames(cv_states_mat2), y=rownames(cv_states_mat2),
 - Plot the two maps together using `subplot()`. Make sure the shading is for the same range of values (google is your friend for this)
 - Describe the difference in the pattern of the CFR.
 
-```{r, eval= FALSE}
+```{r}
 
 ### For specified date
 
